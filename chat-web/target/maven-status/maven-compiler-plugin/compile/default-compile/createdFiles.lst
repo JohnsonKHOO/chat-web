@@ -1,0 +1,9 @@
+com\a2208\chat\service\MessageService.class
+com\a2208\chat\dao\MessageMapper.class
+com\a2208\chat\entity\User.class
+com\a2208\chat\dao\UserMapper.class
+com\a2208\chat\ChatWebApplication.class
+com\a2208\chat\controller\UserController.class
+com\a2208\chat\service\UserService.class
+com\a2208\chat\entity\Message.class
+com\a2208\chat\controller\MessageController.class

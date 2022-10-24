@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.a2208.chat.dao.GroupUserMapper">
+    <resultMap id="BaseResultMap" type="com.a2208.chat.entity.GroupUser">
+        <result column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="group_id" property="groupId" />
+        <result column="name" property="name" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 表字段 -->
+    <sql id="baseColumns">
+        id
+        , user_id
+        , group_id
+        , name
+        , create_time
+    </sql>
+
+    <!-- 查询全部 -->
+    <select id="listAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.group_user
+    </select>
+
+    <!-- 根据主键获取单条记录 -->
+    <select id="getById" resultMap="BaseResultMap" parameterType="Long">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.group_user
+        WHERE id = #{id}
+    </select>
+
+    <!-- 插入全部字段 -->
+    <insert id="insert" parameterType="com.a2208.chat.entity.GroupUser"
+            keyProperty="id" keyColumn="id" useGeneratedKeys="true"
+    >
+        INSERT INTO chat_db.group_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            user_id,
+            group_id,
+            name,
+            create_time,
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{userId},
+            #{groupId},
+            #{name},
+            #{createTime},
+        </trim>
+    </insert>
+
+
+    <!-- 更新,更新全部字段 -->
+    <update id="update" parameterType="com.a2208.chat.entity.GroupUser">
+        UPDATE chat_db.group_user
+        <set>
+            user_id=#{userId},
+            group_id=#{groupId},
+            name=#{name},
+            create_time=#{createTime},
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+
+    <!-- 根据主键删除记录 -->
+    <delete id="delete" parameterType="com.a2208.chat.entity.GroupUser">
+        UPDATE chat_db.group_user
+        SET is_deleted=1
+        WHERE id = #{id}
+    </delete>
+
+
+</mapper>

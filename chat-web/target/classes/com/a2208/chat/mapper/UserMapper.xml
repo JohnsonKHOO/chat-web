@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.a2208.chat.dao.UserMapper">
+    <resultMap id="BaseResultMap" type="com.a2208.chat.entity.User">
+        <result column="id" property="id"/>
+        <result column="account" property="account"/>
+        <result column="nickname" property="nickname"/>
+        <result column="password" property="password"/>
+        <result column="birthday" property="birthday"/>
+        <result column="age" property="age"/>
+        <result column="sex" property="sex"/>
+        <result column="signature" property="signature"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="state_id" property="stateId"/>
+        <result column="avatar" property="avatar"/>
+        <result column="role_id" property="roleId"/>
+    </resultMap>
+
+    <!-- 表字段 -->
+    <sql id="baseColumns">
+        id
+        , account
+        , nickname
+        , password
+        , birthday
+        , age
+        , sex
+        , signature
+        , create_time
+        , update_time
+        , state_id
+        , avatar
+        , role_id
+    </sql>
+
+    <!-- 查询全部用户 -->
+    <select id="listAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE role_id = 1
+    </select>
+
+    <!-- 查询全部管理员 -->
+    <select id="listAdmin" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE role_id = 0
+    </select>
+
+    <select id="countBySex" resultType="Integer" parameterType="Integer">
+        SELECT COUNT(1)
+        FROM (
+                 SELECT id
+                 FROM chat_db.user
+                 WHERE sex = #{sex}) t
+    </select>
+
+    <select id="countByAge" resultType="Integer" parameterType="Integer">
+        SELECT COUNT(1)
+        FROM chat_db.user
+        WHERE age BETWEEN #{fromAge} AND #{toAge}
+    </select>
+
+    <select id="countByAgeSex" resultType="Integer">
+        SELECT COUNT(1)
+        FROM chat_db.user
+        WHERE age BETWEEN #{fromAge} AND #{toAge}
+        AND sex = #{sex}
+    </select>
+
+    <!-- login -->
+    <select id="login" resultMap="BaseResultMap" parameterType="java.util.Map">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE account = #{account} AND password = #{password}
+    </select>
+
+    <!-- 根据主键获取单条记录 -->
+    <select id="getById" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE inStr(id, #{id})
+    </select>
+
+    <!-- 根据account获取单条记录 -->
+    <select id="getByAccount" resultMap="BaseResultMap" parameterType="java.lang.String">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE inStr(account, #{account})
+    </select>
+
+
+    <!-- 插入字段 -->
+    <insert id="insert" parameterType="com.a2208.chat.entity.User"
+            keyProperty="id" keyColumn="id" useGeneratedKeys="true"
+    >
+        INSERT INTO chat_db.user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            account,
+            nickname,
+            password,
+            birthday,
+            age,
+            sex,
+            avatar,
+            role_id,
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{account},
+            #{nickname},
+            #{password},
+            #{birthday},
+            #{age},
+            #{sex},
+            #{avatar},
+            #{roleId},
+        </trim>
+    </insert>
+
+    <!-- 更新,更新全部字段 -->
+    <update id="update" parameterType="com.a2208.chat.entity.User">
+        UPDATE chat_db.user
+        <set>
+            account=#{account},
+            nickname=#{nickname},
+            password=#{password},
+            birthday=#{birthday},
+            age=#{age},
+            sex=#{sex},
+            avatar=#{avatar},
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- 根据主键删除记录 -->
+    <delete id="delete" parameterType="Long">
+        DELETE
+        FROM chat_db.user
+        WHERE id = #{id}
+    </delete>
+
+
+</mapper>
