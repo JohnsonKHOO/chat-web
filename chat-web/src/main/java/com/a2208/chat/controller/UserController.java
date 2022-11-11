@@ -1,9 +1,14 @@
 package com.a2208.chat.controller;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.a2208.chat.component.SessionListener;
 import com.a2208.chat.utils.DateUtil;
+import com.a2208.chat.utils.FileUtil;
 import com.a2208.chat.utils.Result;
 import com.a2208.chat.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.a2208.chat.entity.User;
 import com.a2208.chat.service.UserService;
+import org.springframework.web.multipart.MultipartFile;
+import sun.text.resources.FormatData;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @CrossOrigin
@@ -50,15 +60,12 @@ public class UserController {
     @RequestMapping("/statistics/line")
     public Result statisticsLine() {
 
-        Map<String, Map<String, Integer>> map = new HashMap<>();
-        Map<String, Integer> male = new HashMap<>();
-        Map<String, Integer> female = new HashMap<>();
-
+        Map<String, List<Integer>> map = new HashMap<>();
+        List<Integer> male = new ArrayList<>();
+        List<Integer> female = new ArrayList<>();
         for(int i = 0; i <= 70; i += 10){
-            int j = i + 10;
-            String age = i + "-" + j;
-            male.put(age,userService.countByAgeSex(i,j,0));
-            female.put(age,userService.countByAgeSex(i,j,1));
+            male.add(userService.countByAgeSex(i,i + 9,0));
+            female.add(userService.countByAgeSex(i,i + 9,1));
         }
         map.put("male", male);
         map.put("female", female);
@@ -73,10 +80,10 @@ public class UserController {
      * @param id 主键
      * @return 返回记录，没有返回null
      */
-    @RequestMapping("/getbyid")
-    public Result getById(@RequestParam(value = "id")Long id) {
+    @RequestMapping("/info")
+    public Result searchById(@RequestParam(value = "id")String id) {
         System.out.println(id);
-        User user = userService.getById(id);
+        User user = userService.getById(Long.parseLong(id));
         if(user != null)
             return ResultUtil.success(user);
 
@@ -84,25 +91,77 @@ public class UserController {
     }
 
     /**
-     * 修改，忽略null字段
+     * 根据主键查询
+     *
+     * @return 返回记录，没有返回null
+     */
+    @RequestMapping("/search")
+    public Result searchByAccount(@RequestParam(value = "account")String account,
+                                  @RequestParam(value = "roleId", required = false, defaultValue = "1") Integer roleId){
+        System.out.println(account);
+        List<User> l = userService.getByAccount(account, roleId);
+
+        if(!l.isEmpty())
+            return ResultUtil.success(l);
+
+        return ResultUtil.fail();
+    }
+
+    @RequestMapping(value = "/setstate")
+    public Result setState(@RequestParam(value = "id")String id,
+                           @RequestParam(value = "stateId")Integer stateId
+    ) {
+        Long uid = Long.parseLong(id);
+        Map<String, Long> state = new HashMap<>();
+        state.put("id", uid);
+        state.put("stateId", stateId.longValue());
+        if(userService.updateStateId(state) != 0)
+            return ResultUtil.success(userService.getById(uid));
+
+        return ResultUtil.fail();
+    }
+
+    @RequestMapping("/online")
+    public Result online() {
+        System.out.println("--------------online--------------");
+        return ResultUtil.success(SessionListener.online);
+    }
+
+    /**
+     * 修改
      *
      *
      * @return 返回影响行数
      */
     @RequestMapping("/update")
-    public Result update(@RequestParam(value = "id") Long id,
-                      @RequestParam(value = "account") String account,
-                      @RequestParam(value = "password") String password,
-                      @RequestParam(value = "nickname") String nickname,
-                      @RequestParam(value = "birthday") String birthday,
-                      @RequestParam(value = "sex") Integer sex,
-                      @RequestParam(value = "avatar") String avatar) throws ParseException {
+    public Result update(@RequestParam(value = "user")String user,
+                         @RequestParam(value = "file", required = false) MultipartFile file
+    ) throws ParseException, IOException {
+        if(user != null){
+            System.out.println("update requested:" + user);
+            JSONObject o = JSONUtil.parseObj(user);
+            Long id = o.getLong("id");
+            String account = o.getStr("account");
+            User oldUser = userService.getById(id);
+            //账号已经存在同时不是原先账号
+            if(userService.isExist(account) != null && !oldUser.getAccount().equals(account)){
+                return ResultUtil.fail();
+            }
 
-        User user = new User(id,account,nickname,password, DateUtil.dateParse(birthday),sex,avatar,1);
-        if(userService.update(user) != 0)
-            return ResultUtil.success(user);
+            String avatar = FileUtil.uploadFile(file);
 
-        return ResultUtil.fail();
+            User u = new User(id, account, o.getStr("nickname"),
+                    o.getStr("password"),
+                    DateUtil.dateParse(o.getStr("birthday")),
+                    o.getInt("sex"), avatar, oldUser.getRoleId());
+
+            System.out.println("class:" + u);
+            if(userService.update(u) != 0) {
+                return ResultUtil.success(userService.getById(id));
+            }
+        }
+        return ResultUtil.error(user);
+
     }
 
     /**
@@ -112,8 +171,8 @@ public class UserController {
      * @return 返回影响行数
      */
     @RequestMapping("/delete")
-    public Result delete(@RequestParam(value="id")Integer id) {
-        if(userService.delete(Long.parseLong(String.valueOf(id))) != 0)
+    public Result delete(@RequestParam(value="id")String id) {
+        if(userService.delete(Long.parseLong(id)) != 0)
             return ResultUtil.success(id);
 
         return ResultUtil.fail();

@@ -20,7 +20,8 @@
 
         <!--按钮-->
         <el-form-item class="btns">
-          <el-button class="btn" type="primary" v-on:click="login" v-loading.fullscreen.lock="fullscreenLoading">登录</el-button>
+          <el-button class="btn" type="primary" v-on:click="login" v-loading.fullscreen.lock="fullscreenLoading">登录
+          </el-button>
           <el-button class="btn" type="success" v-on:click="register">注册账号</el-button>
         </el-form-item>
 
@@ -48,38 +49,40 @@
       login() {
         //loading画面
         this.fullscreenLoading = true;
-        setTimeout(() => {this.fullscreenLoading = false;}, 1000);
+        setTimeout(() => {
+          this.fullscreenLoading = false;
+        }, 500);
         this.$axios
           .post('/login', this.$qs.stringify(this.loginForm))
           .then(res => {
             console.log(res.data);
             if (res.data.code === 200) {
+              //session设置
+              sessionStorage.setItem('userInfo', JSON.stringify(res.data.data))
+              //管理员登录
               if (res.data.data.roleId === 0) {
                 this.$message.success(res.data.data.nickname + "登录");
                 this.$router.replace({
                   path: '/admin/home'
                 });
-              } else if (res.data.data.roleId === 1) {
+              }
+              //用户登录
+              else if (res.data.data.roleId === 1) {
                 this.$message.success("欢迎" + res.data.data.nickname + "登录");
                 this.$router.replace({
-                  path: '/chat'
+                  path: '/user/home'
                 });
               }
             } else if (res.data.code === 400) {
               this.$message.error("登录失败，账号或密码错误！");
             }
+            else if (res.data.code === 600) {
+              this.$message.error("登录失败，账号异地登录！");
+            }
           })
           .catch(err => {
-            console.log(err)
+            this.$message.error("请求失败");
           })
-      },
-
-      test() {
-        this.$axios.get("/user/list")
-          .then(function (res) {
-            console.log(res.data)
-          })
-
       },
 
       register() {

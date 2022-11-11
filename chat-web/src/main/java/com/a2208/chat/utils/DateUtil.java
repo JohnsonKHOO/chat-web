@@ -10,11 +10,11 @@ public class DateUtil {
 
     public static Date dateParse(String birthday) throws ParseException {
         DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = fmt.parse(birthday);
+        Date d = fmt.parse(birthday);
         Calendar c = Calendar.getInstance();
-        c.setTime(date);
+        c.setTime(d);
         //日期加一天
-        c.add(Calendar.DAY_OF_MONTH,1);
+        c.add(Calendar.DAY_OF_MONTH,2);
         return c.getTime();
     }
 

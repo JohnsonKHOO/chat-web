@@ -43,12 +43,6 @@ public class UserService {
     public Integer countByAgeSex(Integer fromAge,Integer toAge,Integer sex){return userMapper.countByAgeSex(fromAge, toAge, sex);}
 
     /**
-     * 查询年龄段用户人数
-     * @param fromAge,toAge 年龄段
-     * @return Integer
-     */
-    public Integer countByAge(Integer fromAge,Integer toAge){return userMapper.countByAge(fromAge, toAge);}
-    /**
      * 查询所有记录
      * @param loginInfo 登录信息
      * @return 返回集合，没有返回空List
@@ -71,10 +65,13 @@ public class UserService {
      * @param account 账号
      * @return 返回记录，没有返回null
      */
-    public User getByAccount(String account) {
-        return userMapper.getByAccount(account);
+    public List<User> getByAccount(String account, Integer roleId) {
+        return userMapper.getByAccount(account, roleId);
     }
 
+    public User isExist(String account){
+        return userMapper.isExist(account);
+    }
     /**
      * 新增，插入所有字段
      *
@@ -95,6 +92,9 @@ public class UserService {
         return userMapper.update(user);
     }
 
+    public int updateStateId(Map<String, Long> map){
+        return userMapper.updateStateId(map);
+    }
     /**
      * 删除记录
      *

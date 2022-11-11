@@ -1,20 +1,21 @@
 <template>
-  <div class="userlist_container">
+  <div class="adminlist_container">
 
     <!--搜索筛选-->
-    <el-form :inline="true" :model="userSearch" class="user_search">
+    <el-form :inline="true" :model="adminSearch" class="admin_search">
       <el-form-item label="搜索：">
-        <el-input v-model="userSearch.account" placeholder="请输入用户账号"></el-input>
+        <el-input v-model="adminSearch.account" placeholder="请输入管理员账号"></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="search">搜索</el-button>
-        <el-button type="primary" icon="el-icon-plus" @click="add">新增用户</el-button>
+        <el-button type="primary" icon="el-icon-plus" @click="add">新增管理员</el-button>
         <el-button type="primary" icon="el-icon-refresh" @click="getlist">刷新</el-button>
       </el-form-item>
     </el-form>
     <!--用户信息列表-->
     <el-main>
-      <el-table :data="tableData" highlight-current-row border style="width: 100%;" class="userlist_table" height="500">
+      <el-table :data="tableData" highlight-current-row border style="width: 100%;" class="adminlist_table"
+        height="500">
         <el-table-column prop="id" label="id"></el-table-column>
         <el-table-column label="头像">
           <template v-slot="scope">
@@ -68,8 +69,8 @@
             </el-input>
           </el-form-item>
 
-          <!-- 头像上传 -->
-          <el-form-item label="头像上传：">
+           <!-- 头像上传 -->
+           <el-form-item label="头像上传：">
             <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false" :on-change="handleChange"
               :show-file-list="false" :limit="1" accept="image/png,image/gif,image/jpg,image/jpeg">
               <img v-if="avatar" :src="avatar" class="avatar">
@@ -140,7 +141,7 @@
 <script>
   export default {
 
-    name: 'UserList',
+    name: 'adminList',
 
     data() {
 
@@ -160,10 +161,12 @@
 
 
       return {
-        tableData: [{}],
+        tableData: [{
+
+        }],
         addFormVisible: false,
         editFormVisible: false,
-        userSearch: {},
+        adminSearch: {},
         addForm: {
           account: '',
           nickname: '',
@@ -179,7 +182,7 @@
           birthday: '',
           sex: '',
         },
-        avatar: '',
+        avatar: '', 
         fileList: {},
         /*Form组件提供的表单验证功能，通过rules属性传入约定的验证规则，并将Form-Item的prop属性设置为需校验的字段名*/
         /*新增用户信息表单验证*/
@@ -196,11 +199,18 @@
           }],
 
           account: [{
-            required: true,
-            message: '请输入您的账号',
-            trigger: 'blur'
+              required: true,
+              message: '请输入您的账号',
+              trigger: 'blur'
 
-          }],
+            },
+            {
+              min: 6,
+              max: 15,
+              message: '长度在6到15个字符',
+              trigger: 'blur'
+            }
+          ],
           birthday: [{
               required: true,
               message: '请输入出生日期',
@@ -248,6 +258,7 @@
           if (valid) {
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.addForm));
+            fd.append('roleId', 0);
             fd.append('file', this.fileList[0].raw);
             this.$axios
               .post('/register', fd)
@@ -257,7 +268,7 @@
                   this.$message.success("注册成功！");
                   this.getlist();
                 } else if (res.data.code === 400) {
-                  this.$message.error("新增用户失败，账号已存在！");
+                  this.$message.error("新增管理员失败，账号已存在！");
                 } else if (res.data.code === 600) {
                   this.$message.error("数据错误！");
                 }
@@ -305,7 +316,8 @@
       search() { //搜索按钮方法
         console.log("get all data");
         var fd = new FormData();
-        fd.append('account', this.userSearch.account);
+        fd.append('account', this.adminSearch.account);
+        fd.append('roleId', 0);
         this.$axios
           .post('/user/search', fd)
           .then(res => {
@@ -378,8 +390,9 @@
       },
       getlist() {
         console.log("get list");
-        this.$axios.get('/user/list')
+        this.$axios.get('/admin/list')
           .then(res => {
+            console.log(res.data);
             this.tableData = res.data.data;
             console.log(this.tableData);
           }).catch(err => {
@@ -394,12 +407,12 @@
 
 <style scoped>
   /*根节点样式*/
-  .userlist_container {
+  .adminlist_container {
     height: 100%;
     width: 100%;
   }
 
-  .user_search {
+  .admin_search {
     margin-top: 20px;
     margin-left: 15px;
     padding: 0 10px;
@@ -407,12 +420,6 @@
 
   .deleteColor {
     color: red;
-  }
-
-  .el-image {
-    width: 70px;
-    height: 70px;
-    margin-left: 30px;
   }
 
   .avatar-uploader .el-upload {

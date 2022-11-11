@@ -1,7 +1,12 @@
 <template>
   <div class="chart">
-    <div id="myChart"></div>
-    <div id="myLine"></div>
+    <div id="myPie" class="column-1"></div>
+    <div id="onlineCount" class="column-2">
+      <span style="padding: 25px auto; font-size: 30px;">在线人数:</span>
+      <br><br><br>
+      <i style="  font-size: 40px;">{{this.online}}</i>
+    </div>
+    <div id="myLine" class="column-3"></div>
   </div>
 </template>
 
@@ -10,46 +15,46 @@
     name: 'chart',
     data() {
       return {
-        dataPie: [],
-        dataLine: []
+        online: '',
       }
-    },
-    created(){
-      this.statisticPie();
-      this.statisticLine();
     },
 
     mounted() {
-      this.Draw();
+      this.statisticPie();
+      this.statisticLine();
+      this.online();
     },
     methods: {
       statisticPie() {
         this.$axios.get('/user/statistics/pie')
           .then(res => {
-            console.log(res.data);
-            this.dataPie = res.data.data;
-            console.log(this.dataPie);
-      
+            this.DrawPie(res.data.data);
           }).catch(err => {
-            alert("跨域操作失败！")
+            this.$message.error("请求失败");
           })
       },
       statisticLine() {
         this.$axios.get('/user/statistics/line')
           .then(res => {
-            console.log(res.data);
-            this.dataLine = res.data.data;
-            console.log(this.dataLine);
+            this.DrawLine(res.data.data);
           }).catch(err => {
-            alert("跨域操作失败！")
+            this.$message.error("请求失败");
           })
       },
 
-      Draw() {
-        let myChart = this.$echarts.init(document.getElementById('myChart'))
-        let myLine = this.$echarts.init(document.getElementById('myLine'))
+      online() {
+        console.log("----online----")
+        this.$axios.get('/user/online')
+          .then(res => {
+            this.online = res.data.data;
+          }).catch(err => {
+            this.$message.error("请求失败");
+          })
+      },
 
-        myChart.setOption({
+      DrawPie(pie) {
+
+        let optionPie = {
           title: {
             text: '全用户男女比例',
             subtext: 'pie图',
@@ -64,15 +69,15 @@
             left: 'left'
           },
           series: [{
-            name: 'Access From',
+            name: '全用户男女比例',
             type: 'pie',
             radius: '50%',
             data: [{
-                value: this.dataPie.countMale,
+                value: '',
                 name: '男性用户'
               },
               {
-                value: this.dataPie.countFemale,
+                value: '',
                 name: '女性用户'
               },
             ],
@@ -84,9 +89,19 @@
               }
             }
           }]
-        })
+        }
 
-        myLine.setOption({
+        let myPie = this.$echarts.init(document.getElementById('myPie'));
+
+        optionPie.series[0].data[0].value = pie.countMale;
+        optionPie.series[0].data[1].value = pie.countFemale;
+
+        myPie.setOption(optionPie);
+
+      },
+
+      DrawLine(line) {
+        let optionLine = {
           tooltip: {
             trigger: 'axis',
             axisPointer: {
@@ -117,7 +132,7 @@
           xAxis: [{
             type: 'category',
             name: '年龄',
-            data: ['10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80'],
+            data: ['10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '>80'],
             axisPointer: {
               type: 'shadow'
             },
@@ -152,7 +167,7 @@
                   return value + ' 人';
                 }
               },
-              data: this.dataLine.male
+              data: '',
             },
             {
               name: '女性用户',
@@ -162,10 +177,14 @@
                   return value + ' 人';
                 }
               },
-              data: this.dataLine.female
+              data: '',
             },
           ]
-        })
+        }
+        let myLine = this.$echarts.init(document.getElementById('myLine'));
+        optionLine.series[0].data = line.male;
+        optionLine.series[1].data = line.female;
+        myLine.setOption(optionLine);
       }
     }
   }
@@ -174,16 +193,24 @@
 
 
 <style scoped>
-  #myChart {
-    float: left;
-    height: 500px;
-    width: 500px;
+  .chart {
+    display: grid;
+    grid-template-columns: 400px 0.6fr 0.95fr;
   }
 
-  #myLine {
-    float: left;
+  .column-1 {
+    width: auto !important;
+    height: 550px;
+  }
+
+  .column-2 {
+    width: auto !important;
+    margin-top: 200px;
+  }
+
+  .column-3 {
+    width: auto !important;
     height: 500px;
-    width: 500px;
   }
 
 </style>

@@ -1,59 +1,56 @@
 <template>
-  <!--引入container布局-->
-  <el-container class="home-container">
-    <!--头部-->
-    <el-header style="height: 80px;">
-      <div class="title">
-        <span class="span">聊天软件管理端</span>
-      </div>
+  <div style="background-image: linear-gradient(to bottom right, #fc466b, #3f5efb); height: 100%; width: 100%;">
+    <el-container class="main">
+      <el-aside class="column-1">
 
-      <el-dropdown trigger="hover">
-        <div>
-          <el-avatar :size="45" v-if="user.avatar" :src="require('C://Users//Strix//Desktop//IntellijIdea//chat-web//src//resources//static//img//'
-          +user.avatar)">
-          </el-avatar>
-          <el-avatar v-else :size="45">
-            <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-          </el-avatar>
-        </div>
-        <el-dropdown-menu slot="dropdown" style="width: 300px; margin-right: -75px">
-          <el-dropdown-item>
-            <el-descriptions title="用户信息" style="padding: 20px; font-size: medium;">
-              <el-descriptions-item label="昵称">{{user.nickname}}</el-descriptions-item>
-              <el-descriptions-item label="账号">{{user.account}}</el-descriptions-item>
-            </el-descriptions>
-          </el-dropdown-item>
-
-          <el-dropdown-item divided>
-            <el-link type="primary" icon="el-icon-edit" v-on:click="edit">编辑个人信息</el-link>
-            <el-link type="danger" icon="el-icon-switch-button" v-on:click="logout">登出</el-link>
-          </el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-    </el-header>
-    <!--主体-->
-    <el-container>
-      <!--侧边栏-->
-      <el-aside width="230px">
-        <el-menu unique-opened :router="true" default-active="/admin/userstatistics">
-
-          <el-submenu :index="item.id + ''" v-for="item in menuList" :key="item.id">
-            <template slot="title">
-              <i :class="item.icon"></i>
-              <span>{{ item.title }}</span>
-            </template>
-            <el-menu-item-group>
-              <el-menu-item :index="i.path + ''" v-for="i in item.sList" :key="i.id">
-                <i :class="i.icon"></i>
-                <span>{{ i.title }}</span>
-              </el-menu-item>
-            </el-menu-item-group>
-
-          </el-submenu>
+        <el-menu style="background-color: rgb(96, 96, 96);" unique-opened :router="true"
+          default-active="/admin/userstatistics">
+          <el-menu-item-group>
+            <el-menu-item :index="i.path + ''" v-for="i in menuList" :key="i.id">
+              <i :class="i.icon" style="margin-left: -3px;"></i>
+            </el-menu-item>
+          </el-menu-item-group>
         </el-menu>
+
+        <el-dropdown trigger="hover">
+          <div>
+            <el-avatar :size="45" v-if="user.avatar" :src="require('C://Users//Strix//Desktop//IntellijIdea//chat-web//src//resources//static//img//'
+          +user.avatar)">
+            </el-avatar>
+            <el-avatar v-else :size="45">
+              <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+            </el-avatar>
+          </div>
+
+          <el-dropdown-menu slot="dropdown" style="width: 300px; margin-right: -75px">
+            <el-dropdown-item>
+              <el-descriptions title="用户信息" style="padding: 20px; font-size: medium;">
+                <el-descriptions-item label="昵称">{{user.nickname}}</el-descriptions-item>
+                <el-descriptions-item label="账号">{{user.account}}</el-descriptions-item>
+              </el-descriptions>
+            </el-dropdown-item>
+
+            <el-dropdown-item divided>
+              <el-link type="primary" icon="el-icon-edit" v-on:click="edit">编辑个人信息</el-link>
+              <el-link type="danger" icon="el-icon-switch-button" v-on:click="logout">登出</el-link>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </el-aside>
-      <!--内容-->
-      <el-main>
+
+      <el-aside class="column-2">
+        <div style="text-align: center;border-bottom: 1px solid #ccc">好友</div>
+        <div style="padding: 10px 0" v-for="user in users" :key="user.username">
+          <span>{{ user.username }}</span>
+          <i class="el-icon-chat-dot-round" style="margin-left: 10px; font-size: 16px; cursor: pointer"
+            @click="chatUser = user.username"></i>
+          <span style="font-size: 12px;color: limegreen; margin-left: 5px"
+            v-if="user.username === chatUser">chatting...</span>
+        </div>
+
+      </el-aside>
+
+      <el-main class="column-3" style="overflow:hidden; padding: 0px;">
         <!--编辑用户信息对话框-->
         <el-dialog title="编辑用户信息" :visible.sync="editFormVisible" width="30%" close-on-click-modal="false"
           close-on-press-escape="false" show-close="false">
@@ -101,17 +98,18 @@
           </div>
         </el-dialog>
 
+
         <router-view></router-view>
-
       </el-main>
+
     </el-container>
-  </el-container>
+  </div>
+
 </template>
-
-
 <script>
+  let socket;
   export default {
-    name: 'Home',
+    name: "chat",
     data() {
       var validateBirth = (rule, value, callback) => {
         if (value === '') {
@@ -127,7 +125,6 @@
         }
       };
       return {
-        user: {},
         editFormVisible: false,
         editForm: {
           id: '',
@@ -139,6 +136,39 @@
         },
         avatar: '',
         fileList: {},
+        // circleUrl: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+        user: {},
+        isCollapse: false,
+        users: [{}],
+        chatUser: '',
+        text: "",
+        messages: [{}],
+        content: '',
+        menuList: [{
+            id: 1,
+            title: '聊天',
+            icon: 'el-icon-chat-line-round',
+            path: '/user/chat',
+          },
+          {
+            id: 2,
+            title: '通讯录',
+            icon: 'el-icon-phone',
+            path: '/user/contact',
+          },
+          {
+            id: 3,
+            title: '添加好友',
+            icon: 'el-icon-user-solid',
+            path: '/user/addfriend',
+          },
+          {
+            id: 4,
+            title: '添加群组',
+            icon: 'el-icon-user',
+            path: '/user/addgroup',
+          },
+        ],
         /*Form组件提供的表单验证功能，通过rules属性传入约定的验证规则，并将Form-Item的prop属性设置为需校验的字段名*/
         /*新增用户信息表单验证*/
         rules: {
@@ -152,6 +182,7 @@
             message: '请选择您的性别',
             trigger: 'blur'
           }],
+
           account: [{
               required: true,
               message: '请输入您的账号',
@@ -188,60 +219,15 @@
             }
           ],
         },
-        menuList: [{
-            id: 1,
-            title: '首页',
-            icon: 'el-icon-s-home',
-            sList: [{
-              id: 10,
-              title: '用户统计',
-              path: '/admin/userstatistics',
-              icon: 'el-icon-s-data',
-            }, ]
-          },
-          {
-            id: 2,
-            title: '管理',
-            icon: 'el-icon-s-management',
-            sList: [{
-                id: 20,
-                title: '用户管理',
-                path: '/admin/userlist',
-                icon: 'el-icon-user-solid',
-              },
-              {
-                id: 21,
-                title: '群组管理',
-                icon: 'el-icon-user',
-                path: '/admin/grouplist',
-              },
-              {
-                id: 22,
-                title: '管理员管理',
-                icon: 'el-icon-s-custom',
-                path: '/admin/list',
-              },
-            ]
-          },
-          {
-            id: 3,
-            title: '资源',
-            icon: 'el-icon-folder',
-            sList: [{
-              id: 30,
-              title: '头像',
-              icon: 'el-icon-picture',
-              path: '/assests/avatar',
-            }, ]
-          }
-        ],
+
       }
     },
-
+    created() {
+      this.init();
+    },
     mounted() {
       this.getSession();
     },
-
     methods: {
 
       handleChange(file, fileList) {
@@ -261,7 +247,6 @@
           });
         }
       },
-
       SubmitEditForm() {
         console.log(this.editForm);
         this.$refs['editForm'].validate(valid => {
@@ -314,12 +299,22 @@
           cancelButtonText: '放弃',
           type: 'warning'
         }).then(() => {
-          this.$message({
-            type: 'success',
-            message: '登出成功!'
-          });
-          sessionStorage.clear();
-          this.$router.push("/login");
+          this.$axios
+            .get('/logout')
+            .then(res => {
+              console.log(res.data)
+              if (res.data.code === 200) {
+                this.$message.success("登出成功");
+                sessionStorage.clear();
+                this.$router.push("/login");
+              } else if (res.data.code === 400) {
+                this.$message.error("登出失败");
+              }
+            })
+            .catch(err => {
+              this.$message.error("请求失败");
+            })
+
         }).catch(() => {
           this.$message({
             type: 'info',
@@ -327,46 +322,52 @@
           });
         });
       },
+      send() {
+        if (!this.chatUser) {
+          this.$message({
+            type: 'warning',
+            message: "请选择聊天对象"
+          })
+          return;
+        }
+      },
+      init() {
 
+      }
     }
   }
 
 </script>
-
 <style scoped>
-  .home-container {
-    height: 100%;
-  }
-
-  .el-header {
-    display: flex;
-    padding-left: 250px;
-    align-items: center;
-    font-size: 25px;
-    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.10);
-  }
-
-  .el-aside {
-    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.10);
+  .main {
+    display: grid;
+    height: 80%;
+    width: 70%;
+    margin-left: 200px;
+    margin-top: 60px;
+    position: absolute;
+    grid-template-columns: 60px 2fr 6.5fr;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
 
   .el-dropdown {
-    left: 80%;
+    left: 10%;
+    top: 45%;
   }
 
-
-  .toggle-button {
-    background-color: #4a5064;
-    font-size: 10px;
-    line-height: 24px;
-    color: #fff;
-    text-align: center;
-    letter-spacing: 0.2em;
-    cursor: pointer;
+  .column-1 {
+    background-color: rgb(96, 96, 96);
+    width: auto !important;
   }
 
-  .span {
-    margin-left: -230px;
+  .column-2 {
+    background-color: rgb(245, 245, 245);
+    width: auto !important;
+    line-height: 50px;
+  }
+
+  .column-3 {
+    background-color: white;
   }
 
   .avatar-uploader .el-upload {

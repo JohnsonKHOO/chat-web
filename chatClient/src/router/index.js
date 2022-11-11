@@ -17,26 +17,45 @@ export default new Router({
       component: () => import('@/components/Register')
     },
     {
-      path: '/chat',
-      component: () => import('@/components/chat')
+      path: '/user/home',
+      component: () => import('@/components/User/index'),
+      children:[
+        {
+          path: '/user/chat',
+          component: () => import('@/components/User/Chat/index')
+        },
+        {
+          path: '/user/contact',
+ 
+        },
+        {
+          path: '/user/addfriend',
+ 
+        },
+        {
+          path: '/user/addgroup',
+ 
+        },
+      ]
     },
     {
       path: '/admin/home',
-      component: () => import('@/components/admin/index'),
+      component: () => import('@/components/Admin/index'),
       children:[
         {
           path: '/admin/userlist',
-          component: () => import('@/components/admin/UserList/index'),
+          component: () => import('@/components/Admin/UserList/index'),
         },
         {
           path: '/admin/userstatistics',
-          component: () => import('@/components/admin/UserStatistics/index'),
+          component: () => import('@/components/Admin/UserStatistics/index'),
         },
         {
           path: '/admin/grouplist',
         },
         {
-          path: '/admin/manage',
+          path: '/admin/list',
+          component: () => import('@/components/Admin/AdminList/index'),
         },
         {
           path: '/assests/avatar',

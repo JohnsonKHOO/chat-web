@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import com.a2208.chat.entity.User;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserMapper {
@@ -31,13 +30,6 @@ public interface UserMapper {
      * @return Integer
      */
     Integer countBySex(Integer sex);
-
-    /**
-     * 查询所有男性用户人数
-     * @param fromAge,toAge 性别
-     * @return Integer
-     */
-    Integer countByAge(Integer fromAge,Integer toAge);
 
     /**
      * 查询所有男性用户人数
@@ -67,7 +59,9 @@ public interface UserMapper {
      * @param account 账号不重复
      * @return 返回记录，没有返回null
      */
-    User getByAccount(String account);
+    List<User> getByAccount(String account, Integer roleId);
+
+    User isExist(String account);
 
     /**
      * 新增，插入所有字段
@@ -86,6 +80,8 @@ public interface UserMapper {
      */
     int update(User user);
 
+    int updateStateId(Map<String, Long> map);
+
     /**
      * 删除记录
      *
@@ -93,5 +89,4 @@ public interface UserMapper {
      * @return 返回影响行数
      */
     Long delete(Long id);
-
 }

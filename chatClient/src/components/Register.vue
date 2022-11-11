@@ -40,11 +40,12 @@
         </el-form-item>
         <!-- 头像上传 -->
         <el-form-item label="头像上传：">
-          <el-upload class="avatar-uploader" action="https://jsonplaceholder.typicode.com/posts/"
-            :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
-            <img v-if="registerForm.avatar" :src="registerForm.avatar" class="avatar">
+          <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false"
+          :on-change="handleChange" :show-file-list="false" :limit="1" 
+          accept="image/png,image/gif,image/jpg,image/jpeg">
+            <img v-if="avatar" :src="avatar" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-          </el-upload>
+          </el-upload>  
         </el-form-item>
 
         <!--按钮-->
@@ -88,10 +89,9 @@
           var d = new Date();
           if (Date.parse(value) > d.getTime()) {
             callback(new Error('生日日期不符合规范'));
-          }
-          else callback();
+          } else callback();
         }
-        
+
       };
 
       return {
@@ -102,8 +102,9 @@
           birthday: '',
           sex: '',
           checkpassword: '',
-          avatar: '',
         },
+        avatar: '', 
+        fileList: {},
 
         /*Form组件提供的表单验证功能，通过rules属性传入约定的验证规则，并将Form-Item的prop属性设置为需校验的字段名*/
         registerRules: {
@@ -123,7 +124,14 @@
             message: '请输入您的账号',
             trigger: 'blur'
 
-          }],
+            },
+            {
+              min: 6,
+              max: 15,
+              message: '长度在6到15个字符',
+              trigger: 'blur'
+            }
+          ],
           birthday: [{
               required: true,
               message: '请输入出生日期',
@@ -171,34 +179,43 @@
       }
     },
     methods: {
-      handleAvatarSuccess(res, file) {
-        this.registerForm.avatar = URL.createObjectURL(file.raw);
+      handleChange(file, fileList){
+        this.fileList = fileList;
+        console.log("file:"+ this.fileList);
+        this.avatar = URL.createObjectURL(file.raw);
+        console.log("avatar:" + this.avatar);
       },
-      beforeAvatarUpload(file) {
-        const isJPG = file.type === 'image/jpeg';
-        const isLt2M = file.size / 1024 / 1024 < 2;
 
-        if (!isJPG) {
-          this.$message.error('上传头像图片只能是 JPG 格式!');
-        }
-        if (!isLt2M) {
-          this.$message.error('上传头像图片大小不能超过 2MB!');
-        }
-        return isJPG && isLt2M;
-      },
- 
+       // 文件列表移除文件时的钩子
+      //  fileRemove(file, fileList){
+      //     this.fileList= fileList;
+      //     const list = [];
+      //     this.fileList.forEach(item => {
+      //         list.push({
+      //           id:item.id,
+      //           imageType:0
+      //         });
+      //     });
+      //     this.registerForm.avatar = list;
+      // },
+
       submitForm() {
         console.log(this.registerForm);
         this.$refs['registerForm'].validate(valid => {
           /*若表单验证成功则注册成功，否则注册失败*/
           console.log(valid);
           if (valid) {
+            var fd = new FormData();
+
+            fd.append('user', JSON.stringify(this.registerForm));
+            fd.append('file', this.fileList[0].raw);
             this.$axios
-              .post('/register', this.$qs.stringify(this.registerForm))
+              .post('/register', fd)
               .then(res => {
                 console.log(res.data)
                 if (res.data.code === 200) {
                   this.$message.success("注册成功！");
+                  this.$refs.registerForm.resetFields();
                 } else if (res.data.code === 400) {
                   this.$message.error("注册失败，账号已存在！");
                 } else if (res.data.code === 600) {
@@ -206,10 +223,10 @@
                 }
               })
               .catch(err => {
-                alert("操作失败！")
+                this.$message.error("请求失败");
               })
           } else {
-            console.log('请输入正确信息');
+            console.log('请输入正确信息');  
             return false;
           }
         });
