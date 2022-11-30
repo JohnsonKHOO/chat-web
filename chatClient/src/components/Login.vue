@@ -52,22 +52,19 @@
         setTimeout(() => {
           this.fullscreenLoading = false;
         }, 500);
+        var fd = new FormData();
+        fd.append('account', this.loginForm.account);
+        fd.append('password', this.loginForm.password);
         this.$axios
-          .post('/login', this.$qs.stringify(this.loginForm))
+          .post('/login', fd)
           .then(res => {
             console.log(res.data);
             if (res.data.code === 200) {
+              sessionStorage.setItem('isLogin', true);
               //session设置
-              sessionStorage.setItem('userInfo', JSON.stringify(res.data.data))
-              //管理员登录
-              if (res.data.data.roleId === 0) {
-                this.$message.success(res.data.data.nickname + "登录");
-                this.$router.replace({
-                  path: '/admin/home'
-                });
-              }
+              sessionStorage.setItem('userInfo', JSON.stringify(res.data.data));
               //用户登录
-              else if (res.data.data.roleId === 1) {
+              if (res.data.data.roleId === 1) {
                 this.$message.success("欢迎" + res.data.data.nickname + "登录");
                 this.$router.replace({
                   path: '/user/home'
@@ -81,7 +78,7 @@
             }
           })
           .catch(err => {
-            this.$message.error("请求失败");
+            this.$message.warning("请求失败");
           })
       },
 

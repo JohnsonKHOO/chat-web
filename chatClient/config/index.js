@@ -11,10 +11,13 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/': {
+      '/api': {
         target: 'http://localhost:9000',
+        ws: true,
         changeOrigin: true,
-        
+        pathRewrite:{
+          '^/api':''
+        }
       }
     },
     //开启https

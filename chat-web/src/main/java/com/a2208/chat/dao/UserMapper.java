@@ -61,6 +61,8 @@ public interface UserMapper {
      */
     List<User> getByAccount(String account, Integer roleId);
 
+    int countUser();
+
     User isExist(String account);
 
     /**
@@ -89,4 +91,14 @@ public interface UserMapper {
      * @return 返回影响行数
      */
     Long delete(Long id);
+
+    int updatePassword(String id, String password);
+
+    int updateSignature(String id, String signature);
+
+    int updateAvatar(String id, String avatar);
+
+    List<String> listAvatar();
+
+    User getOne(String account);
 }

@@ -43,9 +43,10 @@ public interface GroupMessageMapper {
     /**
      * 删除记录
      *
-     * @param groupMessage 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
-    int delete(GroupMessage groupMessage);
+    int delete(Long id);
 
+    List<GroupMessage> getByGroupId(Long fromUserId, Long toGroupId, String content);
 }

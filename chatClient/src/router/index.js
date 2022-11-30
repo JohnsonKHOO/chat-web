@@ -3,7 +3,8 @@ import Router from 'vue-router'
 
 Vue.use(Router)
 
-export default new Router({
+let router = new Router({
+  mode: 'history',
   routes: [{
       path: '/',
       redirect: '/login'
@@ -17,31 +18,57 @@ export default new Router({
       component: () => import('@/components/Register')
     },
     {
+      path: '/admin/login',
+      component: () => import('@/components/Admin/Login')
+    },
+    {
       path: '/user/home',
       component: () => import('@/components/User/index'),
-      children:[
+      children: [{
+          path: '/user',
+          redirect: '/user/home'
+        },
         {
           path: '/user/chat',
           component: () => import('@/components/User/Chat/index')
         },
         {
+          path: '/user/info',
+          component: () => import('@/components/User/Info/index')
+        },
+        {
           path: '/user/contact',
- 
+          component: () => import('@/components/User/Contact/index')
         },
         {
-          path: '/user/addfriend',
- 
+          path: '/user/group',
+          component: () => import('@/components/User/Group/index')
         },
         {
-          path: '/user/addgroup',
- 
+          path: '/user/search',
+          component: () => import('@/components/User/Search/SearchUser')
+        },
+        {
+          path: '/group/search',
+          component: () => import('@/components/User/Search/SearchGroup')
+        },
+        {
+          path: '/user/checkpassword',
+          component: () => import('@/components/User/Password/CheckPassword')
+        },
+        {
+          path: '/user/updatepassword',
+          component: () => import('@/components/User/Password/UpdatePassword')
         },
       ]
     },
     {
       path: '/admin/home',
       component: () => import('@/components/Admin/index'),
-      children:[
+      children: [{
+          path: '/admin',
+          redirect: '/admin/home'
+        },
         {
           path: '/admin/userlist',
           component: () => import('@/components/Admin/UserList/index'),
@@ -52,6 +79,7 @@ export default new Router({
         },
         {
           path: '/admin/grouplist',
+          component: () => import('@/components/Admin/GroupList/index'),
         },
         {
           path: '/admin/list',
@@ -59,8 +87,12 @@ export default new Router({
         },
         {
           path: '/assests/avatar',
+          component: () => import('@/components/Admin/WaterFall/index'),
         }
       ]
     },
   ]
 })
+
+export default router
+

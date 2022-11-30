@@ -37,41 +37,52 @@
         WHERE id = #{id}
     </select>
 
+    <!-- 根据发送用户与接收用户id获取记录 -->
+    <select id="getByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.message
+        WHERE ((from_user_id = #{fromUserId} AND to_user_id = #{toUserId})
+            OR (from_user_id = #{toUserId} AND to_user_id = #{fromUserId})
+            )
+        AND inStr(content, #{content})
+    </select>
+
     <!-- 插入全部字段 -->
     <insert id="insert" parameterType="com.a2208.chat.entity.Message"
             keyProperty="id" keyColumn="id" useGeneratedKeys="true"
     >
         INSERT INTO chat_db.message
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            id,
             from_user_id,
             to_user_id,
             content,
-            create_time,
             read_flag,
             img,
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            #{id},
             #{fromUserId},
             #{toUserId},
             #{content},
-            #{createTime},
             #{readFlag},
             #{img},
         </trim>
     </insert>
 
+    <!-- 更新已读 -->
+    <update id="seen" parameterType="Long">
+        UPDATE chat_db.message
+        <set>
+            read_flag = 1,
+        </set>
+        WHERE id = #{id}
+    </update>
 
-    <!-- 更新,更新全部字段 -->
+    <!-- 更新聊天内容 -->
     <update id="update" parameterType="com.a2208.chat.entity.Message">
         UPDATE chat_db.message
         <set>
-            from_user_id=#{fromUserId},
-            to_user_id=#{toUserId},
             content=#{content},
-            create_time=#{createTime},
-            read_flag=#{readFlag},
             img=#{img},
         </set>
         WHERE id = #{id}

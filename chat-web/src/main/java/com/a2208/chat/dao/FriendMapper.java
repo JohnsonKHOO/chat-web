@@ -16,12 +16,12 @@ public interface FriendMapper {
 
 
     /**
-     * 根据主键查询
      *
-     * @param id 主键
+     *
+     *
      * @return 返回记录，没有返回null
      */
-    Friend getById(Long id);
+    List<Friend> getByUserId(Long userId, String account);
 
     /**
      * 新增，插入所有字段
@@ -31,6 +31,7 @@ public interface FriendMapper {
      */
     int insert(Friend friend);
 
+    Friend getById(Long id);
 
     /**
      * 修改，修改所有字段
@@ -48,4 +49,5 @@ public interface FriendMapper {
      */
     int delete(Friend friend);
 
+    Friend isExist(Friend friend);
 }

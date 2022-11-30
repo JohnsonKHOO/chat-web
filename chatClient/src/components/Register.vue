@@ -186,19 +186,6 @@
         console.log("avatar:" + this.avatar);
       },
 
-       // 文件列表移除文件时的钩子
-      //  fileRemove(file, fileList){
-      //     this.fileList= fileList;
-      //     const list = [];
-      //     this.fileList.forEach(item => {
-      //         list.push({
-      //           id:item.id,
-      //           imageType:0
-      //         });
-      //     });
-      //     this.registerForm.avatar = list;
-      // },
-
       submitForm() {
         console.log(this.registerForm);
         this.$refs['registerForm'].validate(valid => {
@@ -208,7 +195,13 @@
             var fd = new FormData();
 
             fd.append('user', JSON.stringify(this.registerForm));
-            fd.append('file', this.fileList[0].raw);
+            if(JSON.stringify(this.fileList) === '{}'){
+              console.log(this.fileList);
+            }
+            else{
+              console.log(this.fileList);
+              fd.append('file', this.fileList[0].raw);
+            }
             this.$axios
               .post('/register', fd)
               .then(res => {
@@ -223,7 +216,7 @@
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
             console.log('请输入正确信息');  

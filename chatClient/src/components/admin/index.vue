@@ -13,23 +13,28 @@
           +user.avatar)">
           </el-avatar>
           <el-avatar v-else :size="45">
-            <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+            <img src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
           </el-avatar>
         </div>
+             <!-- 鼠标放在头像上时显示管理员基本信息与功能 -->
         <el-dropdown-menu slot="dropdown" style="width: 300px; margin-right: -75px">
           <el-dropdown-item>
-            <el-descriptions title="用户信息" style="padding: 20px; font-size: medium;">
-              <el-descriptions-item label="昵称">{{user.nickname}}</el-descriptions-item>
-              <el-descriptions-item label="账号">{{user.account}}</el-descriptions-item>
-            </el-descriptions>
+            <span style="font-size: large;">管理员信息</span>
+            <br>
+            <span>昵称：{{user.nickname}}</span>
+            <br>
+            <span>账号：{{user.account}}</span>
           </el-dropdown-item>
 
           <el-dropdown-item divided>
-            <el-link type="primary" icon="el-icon-edit" v-on:click="edit">编辑个人信息</el-link>
+            <el-link type="primary" icon="el-icon-edit" v-on:click="edit">更改个人信息</el-link>
+          </el-dropdown-item>
+          <el-dropdown-item>
             <el-link type="danger" icon="el-icon-switch-button" v-on:click="logout">登出</el-link>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
+
     </el-header>
     <!--主体-->
     <el-container>
@@ -54,10 +59,10 @@
       </el-aside>
       <!--内容-->
       <el-main>
-        <!--编辑用户信息对话框-->
-        <el-dialog title="编辑用户信息" :visible.sync="editFormVisible" width="30%" close-on-click-modal="false"
+        <!--编辑管理员信息对话框-->
+        <el-dialog title="编辑管理员信息" :visible.sync="editFormVisible" width="30%" close-on-click-modal="false"
           close-on-press-escape="false" show-close="false">
-          <!--编辑用户信息表单-->
+          <!--编辑管理员信息表单-->
           <el-form label-width="100px" :model="editForm" :rules="rules" ref="editForm" class="edit_Form">
             <!--姓名输入框-->
             <el-form-item label="昵称：" prop="nickname">
@@ -78,20 +83,6 @@
             <el-form-item label="出生日期：" prop="birthday">
               <el-date-picker v-model="editForm.birthday" type="date" placeholder="选择日期">
               </el-date-picker>
-            </el-form-item>
-            <!--密码输入框-->
-            <el-form-item label="密码：" prop="password">
-              <el-input type="password" v-model="editForm.password" placeholder="请输入您的密码" clearable show-password>
-              </el-input>
-            </el-form-item>
-
-            <!-- 头像上传 -->
-            <el-form-item label="头像上传：">
-              <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false" :on-change="handleChange"
-                :show-file-list="false" :limit="1" accept="image/png,image/gif,image/jpg,image/jpeg">
-                <img v-if="avatar" :src="avatar" class="avatar">
-                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-              </el-upload>
             </el-form-item>
           </el-form>
           <!--编辑用户信息对话框按钮-->
@@ -115,7 +106,7 @@
     data() {
       var validateBirth = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请输入用户生日日期'));
+          callback(new Error('请输入管理员生日日期'));
         } else {
 
           var d = new Date();
@@ -133,7 +124,6 @@
           id: '',
           account: '',
           nickname: '',
-          password: '',
           birthday: '',
           sex: '',
         },
@@ -239,19 +229,19 @@
     },
 
     mounted() {
-      this.getSession();
+      this.getSessionStorage();
     },
 
     methods: {
-
+      //上传头像
       handleChange(file, fileList) {
         this.fileList = fileList;
         console.log("file:" + this.fileList);
         this.avatar = URL.createObjectURL(file.raw);
         console.log("avatar:" + this.avatar);
       },
-
-      getSession() {
+      //
+      getSessionStorage() {
         this.user = JSON.parse(sessionStorage.getItem('userInfo'));
         if (this.user == null) {
           console.log("session错误！");
@@ -261,7 +251,7 @@
           });
         }
       },
-
+      //提交编辑用户信息表单
       SubmitEditForm() {
         console.log(this.editForm);
         this.$refs['editForm'].validate(valid => {
@@ -270,7 +260,6 @@
           if (valid) {
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.editForm));
-            fd.append('file', this.fileList[0].raw);
             this.$axios
               .post('/user/update', fd)
               .then(res => {
@@ -284,16 +273,16 @@
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
-            this.$message.error("数据错误!");
+            this.$message.warning("数据错误!");
             return false;
           }
         });
       },
       save2() { //编辑用户信息表单的保存
-        this.$confirm('是否确定编辑此用户信息？', '提示', {
+        this.$confirm('是否确定编辑此管理员信息？', '提示', {
           confirmButtonText: '确定', //弹出框的确定提交按钮
           cancelButtonText: '取消', //弹出框的取消提交按钮
           type: 'warning', //弹出框类型

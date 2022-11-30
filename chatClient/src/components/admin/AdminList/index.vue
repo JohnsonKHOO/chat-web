@@ -1,22 +1,13 @@
 <template>
   <div class="adminlist_container">
 
-    <!--搜索筛选-->
-    <el-form :inline="true" :model="adminSearch" class="admin_search">
-      <el-form-item label="搜索：">
-        <el-input v-model="adminSearch.account" placeholder="请输入管理员账号"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="search">搜索</el-button>
-        <el-button type="primary" icon="el-icon-plus" @click="add">新增管理员</el-button>
-        <el-button type="primary" icon="el-icon-refresh" @click="getlist">刷新</el-button>
-      </el-form-item>
-    </el-form>
-    <!--用户信息列表-->
+    <!--管理员信息列表-->
     <el-main>
-      <el-table :data="tableData" highlight-current-row border style="width: 100%;" class="adminlist_table"
-        height="500">
-        <el-table-column prop="id" label="id"></el-table-column>
+      <el-table
+        :data="tableData.filter(data => !search || data.account.toLowerCase().includes(search.toLowerCase())
+        || data.nickname.toLowerCase().includes(search.toLowerCase()))"
+        highlight-current-row border style="width: 100%;" class="adminlist_table" height="500">
+        <el-table-column prop="id" label="管理员id"></el-table-column>
         <el-table-column label="头像">
           <template v-slot="scope">
             <el-image v-if="scope.row.avatar"
@@ -31,6 +22,10 @@
         <el-table-column prop="createTime" :formatter="susSet" label="创建时间"></el-table-column>
         <el-table-column prop="updateTime" :formatter="susSet" label="最近更新时间"></el-table-column>
         <el-table-column label="操作" width="180" align="center">
+          <template slot="header" slot-scope="scope">
+            <el-input v-if="scope" v-model="search" size="mini" placeholder="输入关键字搜索" />
+            <el-button type="text" icon="el-icon-plus" @click="add">新增管理员</el-button>
+          </template>
           <template slot-scope="scope">
             <el-button type="text" icon="el-icon-edit" @click="edit(scope.row)">编辑</el-button>
             <el-button type="text" icon="el-icon-delete" class="deleteColor" @click="del(scope.row.id)">删除</el-button>
@@ -38,10 +33,10 @@
         </el-table-column>
       </el-table>
 
-      <!--新增用户信息对话框-->
-      <el-dialog title="新增用户信息" :visible.sync="addFormVisible" width="30%" close-on-click-modal="false"
+      <!--新增管理员信息对话框-->
+      <el-dialog title="新增管理员信息" :visible.sync="addFormVisible" width="30%" close-on-click-modal="false"
         close-on-press-escape="false" show-close="false">
-        <!--新增用户信息表单-->
+        <!--新增管理员信息表单-->
         <el-form label-width="100px" :model="addForm" :rules="rules" ref="addForm" class="add_Form">
           <!--姓名输入框-->
           <el-form-item label="昵称：" prop="nickname">
@@ -69,8 +64,8 @@
             </el-input>
           </el-form-item>
 
-           <!-- 头像上传 -->
-           <el-form-item label="头像上传：">
+          <!-- 头像上传 -->
+          <el-form-item label="头像上传：">
             <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false" :on-change="handleChange"
               :show-file-list="false" :limit="1" accept="image/png,image/gif,image/jpg,image/jpeg">
               <img v-if="avatar" :src="avatar" class="avatar">
@@ -78,17 +73,17 @@
             </el-upload>
           </el-form-item>
         </el-form>
-        <!--新增用户信息对话框按钮-->
+        <!--新增管理员信息对话框按钮-->
         <div slot="footer" class="dialog_footer">
           <el-button @click="addFormVisible = false">取消</el-button>
           <el-button type="primary" @click="save">保存</el-button>
         </div>
       </el-dialog>
 
-      <!--编辑用户信息对话框-->
-      <el-dialog title="编辑用户信息" :visible.sync="editFormVisible" width="30%" close-on-click-modal="false"
+      <!--编辑管理员信息对话框-->
+      <el-dialog title="编辑管理员信息" :visible.sync="editFormVisible" width="30%" close-on-click-modal="false"
         close-on-press-escape="false" show-close="false">
-        <!--编辑用户信息表单-->
+        <!--编辑管理员信息表单-->
         <el-form label-width="100px" :model="editForm" :rules="rules" ref="editForm" class="edit_Form">
           <!--姓名输入框-->
           <el-form-item label="昵称：" prop="nickname">
@@ -110,29 +105,13 @@
             <el-date-picker v-model="editForm.birthday" type="date" placeholder="选择日期">
             </el-date-picker>
           </el-form-item>
-          <!--密码输入框-->
-          <el-form-item label="密码：" prop="password">
-            <el-input type="password" v-model="editForm.password" placeholder="请输入您的密码" clearable show-password>
-            </el-input>
-          </el-form-item>
-
-          <!-- 头像上传 -->
-          <el-form-item label="头像上传：">
-            <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false" :on-change="handleChange"
-              :show-file-list="false" :limit="1" accept="image/png,image/gif,image/jpg,image/jpeg">
-              <img v-if="avatar" :src="avatar" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
-          </el-form-item>
         </el-form>
-        <!--编辑用户信息对话框按钮-->
+        <!--编辑管理员信息对话框按钮-->
         <div slot="footer" class="dialog_footer">
           <el-button @click="editFormVisible = false">取消</el-button>
           <el-button type="primary" @click="save2">更新</el-button>
         </div>
       </el-dialog>
-
-
 
     </el-main>
   </div>
@@ -141,13 +120,13 @@
 <script>
   export default {
 
-    name: 'adminList',
+    name: 'AdminList',
 
     data() {
 
       var validateBirth = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请输入用户生日日期'));
+          callback(new Error('请输入管理员生日日期'));
         } else {
 
           var d = new Date();
@@ -161,31 +140,20 @@
 
 
       return {
-        tableData: [{
-
-        }],
+        tableData: [{}],
         addFormVisible: false,
         editFormVisible: false,
-        adminSearch: {},
+        search: '',
         addForm: {
-          account: '',
-          nickname: '',
-          password: '',
-          birthday: '',
-          sex: '',
+
         },
         editForm: {
-          id: '',
-          account: '',
-          nickname: '',
-          password: '',
-          birthday: '',
-          sex: '',
+   
         },
-        avatar: '', 
+        avatar: '',
         fileList: {},
         /*Form组件提供的表单验证功能，通过rules属性传入约定的验证规则，并将Form-Item的prop属性设置为需校验的字段名*/
-        /*新增用户信息表单验证*/
+        /*新增管理员信息表单验证*/
         rules: {
           nickname: [{
             required: true,
@@ -199,18 +167,11 @@
           }],
 
           account: [{
-              required: true,
-              message: '请输入您的账号',
-              trigger: 'blur'
+            required: true,
+            message: '请输入您的账号',
+            trigger: 'blur'
 
-            },
-            {
-              min: 6,
-              max: 15,
-              message: '长度在6到15个字符',
-              trigger: 'blur'
-            }
-          ],
+          }],
           birthday: [{
               required: true,
               message: '请输入出生日期',
@@ -238,18 +199,18 @@
     },
 
     mounted() {
-      this.getlist();
+      this.list();
     },
 
     methods: {
-
+      //上传头像
       handleChange(file, fileList){
         this.fileList = fileList;
         console.log("file:"+ this.fileList);
         this.avatar = URL.createObjectURL(file.raw);
         console.log("avatar:" + this.avatar);
       },
-
+      //提交新增表单
       submitForm() {
         console.log(this.addForm);
         this.$refs['addForm'].validate(valid => {
@@ -259,14 +220,20 @@
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.addForm));
             fd.append('roleId', 0);
-            fd.append('file', this.fileList[0].raw);
+            if(JSON.stringify(this.fileList) === '{}'){
+              console.log(this.fileList);
+            }
+            else{
+              console.log(this.fileList);
+              fd.append('file', this.fileList[0].raw);
+            }
             this.$axios
               .post('/register', fd)
               .then(res => {
                 console.log(res.data)
                 if (res.data.code === 200) {
                   this.$message.success("注册成功！");
-                  this.getlist();
+                  this.list();
                 } else if (res.data.code === 400) {
                   this.$message.error("新增管理员失败，账号已存在！");
                 } else if (res.data.code === 600) {
@@ -274,7 +241,7 @@
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
             console.log('请输入正确信息');
@@ -282,7 +249,7 @@
           }
         });
       },
-
+      //提交编辑表单
       SubmitEditForm() {
         console.log(this.editForm);
         this.$refs['editForm'].validate(valid => {
@@ -291,48 +258,49 @@
           if (valid) {
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.editForm));
-            fd.append('file', this.fileList[0].raw);
             this.$axios
               .post('/user/update', fd)
               .then(res => {
                 console.log(res.data)
                 if (res.data.code === 200) {
                   this.$message.success("更新成功！");
-                  this.getlist();
+                  this.list();
                 } else if (res.data.code === 400) {
-                  this.$message.error("用户账号已存在！");
+                  this.$message.error("管理员账号已存在！");
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
-            this.$message.error("数据错误!");
+            this.$message.warning("数据错误!");
             return false;
           }
         });
       },
 
-      search() { //搜索按钮方法
-        console.log("get all data");
+      list() { //搜索按钮方法
         var fd = new FormData();
-        fd.append('account', this.adminSearch.account);
-        fd.append('roleId', 0);
+        fd.append('account', "");
+        fd.append('roleId', 0)
         this.$axios
           .post('/user/search', fd)
           .then(res => {
-            console.log(res.data);
-            this.tableData = res.data.data;
+            if(res.data.code === 200){
+              this.tableData = res.data.data;
+            }else{
+              this.$message.error("没有数据！");
+            }
           }).catch(err => {
-            this.$message.error("请求失败");
+            this.$message.warning("请求失败");
           })
       },
-      add() { //显示新增用户表单
+      add() { //显示新增管理员表单
         this.addForm = {};
         this.addFormVisible = true;
       },
-      save() { //新增用户表单的保存
-        this.$confirm('是否确定新增此用户？', '提示', {
+      save() { //新增管理员表单的保存
+        this.$confirm('是否确定新增此管理员？', '提示', {
           confirmButtonText: '确定', //弹出框的确定提交按钮
           cancelButtonText: '取消', //弹出框的取消提交按钮
           type: 'warning', //弹出框类型
@@ -341,8 +309,8 @@
           this.submitForm();
         })
       },
-      save2() { //编辑用户信息表单的保存
-        this.$confirm('是否确定编辑此用户信息？', '提示', {
+      save2() { //编辑管理员信息表单的保存
+        this.$confirm('是否确定编辑此管理员信息？', '提示', {
           confirmButtonText: '确定', //弹出框的确定提交按钮
           cancelButtonText: '取消', //弹出框的取消提交按钮
           type: 'warning', //弹出框类型
@@ -359,7 +327,7 @@
       },
 
       del(id) { //删除按钮方法
-        this.$confirm('是否确定删除此用户？', '提示', {
+        this.$confirm('是否确定删除此管理员？', '提示', {
           confirmButtonText: '确定', //弹出框的确定提交按钮
           cancelButtonText: '取消', //弹出框的取消提交按钮
           type: 'warning', //弹出框类型
@@ -374,32 +342,21 @@
               if (res.data.code === 200) {
                 this.$message({
                   type: 'success',
-                  message: '删除用户成功！'
+                  message: '删除管理员成功！'
                 });
-                this.getlist();
+                this.list();
               } else {
                 this.$message({
                   type: 'error',
-                  message: '删除用户失败'
+                  message: '删除管理员失败'
                 });
               }
             }).catch(err => {
-              this.$message.error("请求失败");
+              this.$message.warning("请求失败");
             })
         })
       },
-      getlist() {
-        console.log("get list");
-        this.$axios.get('/admin/list')
-          .then(res => {
-            console.log(res.data);
-            this.tableData = res.data.data;
-            console.log(this.tableData);
-          }).catch(err => {
-            this.$message.error("请求失败");
-          })
-
-      },
+     
     }
   }
 
@@ -420,6 +377,12 @@
 
   .deleteColor {
     color: red;
+  }
+
+  .el-image {
+    width: 70px;
+    height: 70px;
+    margin-left: 30px;
   }
 
   .avatar-uploader .el-upload {

@@ -5,8 +5,19 @@
         <result column="id" property="id" />
         <result column="user_id" property="userId" />
         <result column="group_id" property="groupId" />
-        <result column="name" property="name" />
+        <result column="gu_name" property="name" />
         <result column="create_time" property="createTime" />
+        <association property="group" javaType="com.a2208.chat.entity.Group">
+            <result column="group_id" property="id" />
+            <result column="g_name" property="name" />
+            <result column="owner_id" property="ownerId" />
+            <result column="avatar" property="avatar" />
+        </association>
+        <association property="user" javaType="com.a2208.chat.entity.User">
+            <result column="user_id" property="id"/>
+            <result column="account" property="account"/>
+            <result column="nickname" property="nickname"/>
+        </association>
     </resultMap>
 
     <!-- 表字段 -->
@@ -14,7 +25,7 @@
         id
         , user_id
         , group_id
-        , name
+        , gu_name
         , create_time
     </sql>
 
@@ -28,9 +39,42 @@
     <!-- 根据主键获取单条记录 -->
     <select id="getById" resultMap="BaseResultMap" parameterType="Long">
         SELECT
-        <include refid="baseColumns" />
+        *
         FROM chat_db.group_user
         WHERE id = #{id}
+    </select>
+<!--    根据群主id查找-->
+    <select id="getByGroupId" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM chat_db.group_user gu, chat_db.group g, chat_db.user u
+        WHERE gu.group_id = #{groupId}
+        AND (inStr(u.account, #{account})
+                 OR inStr(u.nickname, #{account})
+                 OR inStr(gu.gu_name, #{account}) )
+        AND gu.user_id = u.id
+        AND gu.group_id = g.id
+    </select>
+<!--    根据用户id查找-->
+    <select id="getByUserId" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM chat_db.group_user gu, chat_db.group g, chat_db.user u
+        WHERE gu.user_id = #{userId}
+        AND (inStr(u.account, #{account})
+            OR inStr(u.nickname, #{account})
+            OR inStr(gu.gu_name, #{account}) )
+        AND gu.user_id = u.id
+        AND gu.group_id = g.id
+    </select>
+
+    <!-- 查看用户是否已存在群内 -->
+    <select id="isExist" resultMap="BaseResultMap" parameterType="Long">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.group_user
+        WHERE group_id = #{groupId}
+        AND user_id = #{userId}
     </select>
 
     <!-- 插入全部字段 -->
@@ -41,37 +85,38 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             user_id,
             group_id,
-            name,
-            create_time,
+            gu_name
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
             #{userId},
             #{groupId},
-            #{name},
-            #{createTime},
+            #{name}
         </trim>
     </insert>
 
 
-    <!-- 更新,更新全部字段 -->
+    <!-- 更新群内昵称 -->
     <update id="update" parameterType="com.a2208.chat.entity.GroupUser">
         UPDATE chat_db.group_user
         <set>
-            user_id=#{userId},
-            group_id=#{groupId},
-            name=#{name},
-            create_time=#{createTime},
+            gu_name=#{name}
         </set>
         WHERE id = #{id}
     </update>
 
-
-
     <!-- 根据主键删除记录 -->
-    <delete id="delete" parameterType="com.a2208.chat.entity.GroupUser">
-        UPDATE chat_db.group_user
-        SET is_deleted=1
+    <delete id="delete" parameterType="Long">
+        DELETE
+        FROM chat_db.group_user
         WHERE id = #{id}
+    </delete>
+
+    <!-- 通过用户id和群id删除 -->
+    <delete id="deleteByBoth" parameterType="Long">
+        DELETE
+        FROM chat_db.group_user
+        WHERE user_id = #{userId}
+        AND group_id = #{groupId}
     </delete>
 
 

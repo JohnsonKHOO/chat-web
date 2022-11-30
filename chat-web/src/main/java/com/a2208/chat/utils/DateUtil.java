@@ -5,7 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
+//对日期进行处理
 public class DateUtil {
 
     public static Date dateParse(String birthday) throws ParseException {

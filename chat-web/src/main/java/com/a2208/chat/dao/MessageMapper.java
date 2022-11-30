@@ -44,9 +44,10 @@ public interface MessageMapper {
     /**
      * 删除记录
      *
-     * @param message 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
-    int delete(Message message);
+    int delete(Long id);
 
+    List<Message> getByUserId(Long fromUserId, Long toUserId,String content);
 }

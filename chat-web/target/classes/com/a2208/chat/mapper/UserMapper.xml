@@ -34,12 +34,20 @@
         , role_id
     </sql>
 
+    <!-- 用户人数 -->
+    <select id="countUser" resultType="Integer">
+        SELECT COUNT(1)
+        FROM (
+                 SELECT id
+                 FROM chat_db.user
+                 WHERE role_id = 1) t
+    </select>
+
     <!-- 查询全部用户 -->
     <select id="listAll" resultMap="BaseResultMap">
         SELECT
         <include refid="baseColumns"/>
         FROM chat_db.user
-        WHERE role_id = 1
     </select>
 
     <!-- 查询全部管理员 -->
@@ -49,6 +57,15 @@
         FROM chat_db.user
         WHERE role_id = 0
     </select>
+
+    <!-- 列出所有图片 -->
+    <select id="listAvatar" resultType="String">
+        SELECT
+        DISTINCT avatar
+        FROM chat_db.user
+        WHERE avatar != ""
+    </select>
+
     <!-- 查询用户性别人数占比 -->
     <select id="countBySex" resultType="Integer" parameterType="Integer">
         SELECT COUNT(1)
@@ -56,7 +73,7 @@
                  SELECT id
                  FROM chat_db.user
                  WHERE sex = #{sex}
-                 AND role_id = 1) t
+                   AND role_id = 1) t
     </select>
 
     <!-- 查询全部用户年龄段性别 -->
@@ -64,11 +81,11 @@
         SELECT COUNT(1)
         FROM chat_db.user
         WHERE age BETWEEN #{fromAge} AND #{toAge}
-        AND sex = #{sex}
-        AND role_id = 1
+          AND sex = #{sex}
+          AND role_id = 1
     </select>
 
-    <!-- login -->
+    <!-- login，还有检查密码时使用 -->
     <select id="login" resultMap="BaseResultMap" parameterType="java.util.Map">
         SELECT
         <include refid="baseColumns"/>
@@ -83,7 +100,7 @@
         FROM chat_db.user
         WHERE id = #{id}
     </select>
-
+    <!-- 检查账号是否存在 -->
     <select id="isExist" resultMap="BaseResultMap" parameterType="String">
         SELECT
         <include refid="baseColumns"/>
@@ -91,15 +108,23 @@
         WHERE account = #{account}
     </select>
 
-    <!-- 根据account获取单条记录 -->
+    <!-- 根据account获取记录 -->
     <select id="getByAccount" resultMap="BaseResultMap">
         SELECT
         <include refid="baseColumns"/>
         FROM chat_db.user
-        WHERE inStr(account, #{account}) OR inStr(nickname, #{account})
+        WHERE (inStr(account, #{account}) OR inStr(nickname, #{account}))
         AND role_id = #{roleId}
     </select>
 
+    <!-- 根据account获取记录 -->
+    <select id="getOne" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM chat_db.user
+        WHERE account = #{account}
+        AND role_id = 1
+    </select>
 
     <!-- 插入字段 -->
     <insert id="insert" parameterType="com.a2208.chat.entity.User"
@@ -137,21 +162,45 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 更新,更新全部字段 -->
+    <!-- 更新个人简介字段 -->
+    <update id="updateSignature" >
+        UPDATE chat_db.user
+        <set>
+            signature = #{signature}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新密码 -->
+    <update id="updatePassword">
+        UPDATE chat_db.user
+        <set>
+            password = #{password}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新头像 -->
+    <update id="updateAvatar">
+        UPDATE chat_db.user
+        <set>
+            avatar = #{avatar}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新部分字段字段 -->
     <update id="update" parameterType="com.a2208.chat.entity.User">
         UPDATE chat_db.user
         <set>
             account=#{account},
             nickname=#{nickname},
-            password=#{password},
             birthday=#{birthday},
             age=#{age},
             sex=#{sex},
-            avatar=#{avatar},
         </set>
         WHERE id = #{id}
     </update>
-
 
     <!-- 根据主键删除记录 -->
     <delete id="delete" parameterType="Long">

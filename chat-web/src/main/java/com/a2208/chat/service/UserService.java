@@ -69,6 +69,8 @@ public class UserService {
         return userMapper.getByAccount(account, roleId);
     }
 
+    public int countUser(){return userMapper.countUser();}
+
     public User isExist(String account){
         return userMapper.isExist(account);
     }
@@ -105,4 +107,23 @@ public class UserService {
         return userMapper.delete(id);
     }
 
+    public int updatePassword(String id, String password) {
+        return userMapper.updatePassword(id, password);
+    }
+
+    public int updateSignature(String id, String signature) {
+        return userMapper.updateSignature(id, signature);
+    }
+
+    public int updateAvatar(String id, String avatar) {
+        return userMapper.updateAvatar(id,  avatar);
+    }
+
+    public List<String> listAvatar() {
+        return userMapper.listAvatar();
+    }
+
+    public User getOne(String account) {
+        return userMapper.getOne(account);
+    }
 }

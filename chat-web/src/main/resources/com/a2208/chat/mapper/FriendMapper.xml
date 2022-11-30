@@ -5,7 +5,17 @@
         <result column="id" property="id" />
         <result column="user_id" property="userId" />
         <result column="friend_id" property="friendId" />
-        <result column="name" property="name" />
+        <result column="f_name" property="name" />
+        <association property="user" javaType="com.a2208.chat.entity.User">
+            <result column="friend_id" property="id"/>
+            <result column="account" property="account"/>
+            <result column="nickname" property="nickname"/>
+            <result column="birthday" property="birthday"/>
+            <result column="age" property="age"/>
+            <result column="sex" property="sex"/>
+            <result column="signature" property="signature"/>
+            <result column="avatar" property="avatar"/>
+        </association>
     </resultMap>
 
     <!-- 表字段 -->
@@ -13,22 +23,53 @@
         id
         , user_id
         , friend_id
-        , name
+        , f_name
     </sql>
 
     <!-- 查询全部 -->
     <select id="listAll" resultMap="BaseResultMap">
         SELECT
-        <include refid="baseColumns" />
-        FROM chat_db.friend
+        *
+        FROM chat_db.friend f, chat_db.user u
+        WHERE f.friend_id = u.id
     </select>
 
-    <!-- 根据主键获取单条记录 -->
+
+    <!-- 根据user_id获取记录 -->
+    <select id="getByUserId" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM chat_db.friend f, chat_db.user u
+        WHERE f.user_id = #{userId}
+        AND (inStr(u.account, #{account})
+                 OR inStr(u.nickname, #{account})
+                 OR inStr(f.f_name, #{account}))
+        AND f.friend_id = u.id
+    </select>
+
+    <!-- 根据user_id与friend_id获取记录 -->
+    <select id="getByBoth" resultMap="BaseResultMap">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.friend
+        WHERE user_id = #{userId}
+        AND friend_id = #{friendId}
+    </select>
+
+    <!-- 根据id获取记录 -->
     <select id="getById" resultMap="BaseResultMap" parameterType="Long">
         SELECT
         <include refid="baseColumns" />
         FROM chat_db.friend
         WHERE id = #{id}
+    </select>
+<!--    查询两个用户是否已经为好友-->
+    <select id="isExist" resultMap="BaseResultMap" parameterType="com.a2208.chat.entity.Friend">
+        SELECT
+        <include refid="baseColumns" />
+        FROM chat_db.friend
+        WHERE user_id = #{userId}
+        AND friend_id = #{friendId}
     </select>
 
     <!-- 插入全部字段 -->
@@ -39,7 +80,7 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             user_id,
             friend_id,
-            name,
+            f_name,
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
             #{userId},
@@ -48,22 +89,21 @@
         </trim>
     </insert>
 
-    <!-- 更新,更新全部字段 -->
+    <!-- 更新好友备注 -->
     <update id="update" parameterType="com.a2208.chat.entity.Friend">
         UPDATE chat_db.friend
         <set>
-            user_id=#{userId},
-            friend_id=#{friendId},
-            name=#{name},
+            f_name=#{name}
         </set>
         WHERE id = #{id}
     </update>
 
-    <!-- 根据主键删除记录 -->
+    <!-- 根据用户id与好友id删除,方便双向删除 -->
     <delete id="delete" parameterType="com.a2208.chat.entity.Friend">
-        UPDATE chat_db.friend
-        SET is_deleted=1
-        WHERE id = #{id}
+        DELETE
+        FROM chat_db.friend
+        WHERE user_id = #{userId}
+        AND friend_id = #{friendId}
     </delete>
 
 

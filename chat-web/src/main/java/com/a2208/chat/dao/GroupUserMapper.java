@@ -1,6 +1,8 @@
 package com.a2208.chat.dao;
 
 import java.util.List;
+
+import com.a2208.chat.entity.Friend;
 import org.apache.ibatis.annotations.Mapper;
 import com.a2208.chat.entity.GroupUser;
 
@@ -44,9 +46,16 @@ public interface GroupUserMapper {
     /**
      * 删除记录
      *
-     * @param groupUser 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
-    int delete(GroupUser groupUser);
+    int delete(Long id);
 
+    List<GroupUser> getByGroupId(Long groupId, String account);
+
+    GroupUser isExist(GroupUser gu);
+
+    int deleteByBoth(Long ownerId, Long id);
+
+    List<GroupUser> getByUserId(Long userId, String account);
 }

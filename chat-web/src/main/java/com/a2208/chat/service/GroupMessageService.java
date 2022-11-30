@@ -2,6 +2,7 @@ package com.a2208.chat.service;
 
 import com.a2208.chat.entity.GroupMessage;
 import com.a2208.chat.dao.GroupMessageMapper;
+import com.a2208.chat.entity.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,11 +59,14 @@ public class GroupMessageService {
     /**
      * 删除记录
      *
-     * @param groupMessage 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
-    public int delete(GroupMessage groupMessage) {
-        return groupMessageMapper.delete(groupMessage);
+    public int delete(Long id) {
+        return groupMessageMapper.delete(id);
     }
 
+    public List<GroupMessage> getByGroupId(Long fromUserId, Long toGroupId, String content) {
+        return groupMessageMapper.getByGroupId(fromUserId,toGroupId,content);
+    }
 }

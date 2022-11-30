@@ -22,15 +22,15 @@ public class FriendService {
         return friendMapper.listAll();
     }
 
-
+    public Friend getById(Long id){return friendMapper.getById(id);}
     /**
-     * 根据主键查询
      *
-     * @param id 主键
+     *
+     *
      * @return 返回记录，没有返回null
      */
-    public Friend getById(Long id) {
-        return friendMapper.getById(id);
+    public List<Friend> getByUserId(Long userId, String account) {
+        return friendMapper.getByUserId(userId, account);
     }
 
     /**
@@ -65,4 +65,7 @@ public class FriendService {
         return friendMapper.delete(friend);
     }
 
+    public Friend isExist(Friend friend) {
+        return friendMapper.isExist(friend);
+    }
 }

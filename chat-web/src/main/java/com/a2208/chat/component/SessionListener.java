@@ -2,19 +2,45 @@ package com.a2208.chat.component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.servlet.ServletContext;
+
 import javax.servlet.annotation.WebListener;
 import javax.servlet.http.*;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+//session监听
 @WebListener
 public class SessionListener implements HttpSessionListener, HttpSessionAttributeListener {
     public static final Logger logger= LoggerFactory.getLogger(SessionListener.class);
-    public static int online = 0;
+    private static final Map<String, HttpSession> sessions = new HashMap<>();
+
+    //获取在线用户信息
+    public static List<HttpSession> getActiveSessions(){
+        logger.info("--activeSessions--");
+        return new ArrayList<>(sessions.values());
+    }
+    //登出时处理session
+    public static void sessionLogout(HttpServletRequest request){
+        logger.info("--sessionLogout--");
+        HttpSession session = request.getSession(false);
+        logger.info("session----" + session);
+        if(sessions.containsKey(session.getId())){
+            sessions.remove(session.getId(),session);
+            session.removeAttribute("account");
+            session.invalidate();
+        }
+    }
+    //获取在线人数
+    public static int getOnline(){
+        return sessions.size();
+    }
+
+
     @Override
-    public void  attributeAdded(HttpSessionBindingEvent httpSessionBindingEvent) {
+    public void attributeAdded(HttpSessionBindingEvent httpSessionBindingEvent) {
         logger.info("--attributeAdded--");
-        HttpSession session=httpSessionBindingEvent.getSession();
         logger.info("key----:"+httpSessionBindingEvent.getName());
         logger.info("value---:"+httpSessionBindingEvent.getValue());
 
@@ -33,39 +59,17 @@ public class SessionListener implements HttpSessionListener, HttpSessionAttribut
     @Override
     public void sessionCreated(HttpSessionEvent event) {
         logger.info("---sessionCreated----");
-        HttpSession session = event.getSession();
-        logger.info("session----:" + session);
-        ServletContext application = session.getServletContext();
-        // 在application范围由一个HashSet集保存所有的session
-        HashSet sessions = (HashSet) application.getAttribute("sessions");
-        if (sessions == null) {
-            sessions = new HashSet();
-            application.setAttribute("sessions", sessions);
-        }
-        // 新创建的session均添加到HashSet集中
-        sessions.add(session);
-        logger.info("sessions----:" + sessions);
-        online = sessions.size();
-        logger.info("online----:" + online);
-        // 可以在别处从application范围中取出sessions集合
-        // 然后使用sessions.size()获取当前活动的session数，即为“在线人数”
+        sessions.put(event.getSession().getId(),event.getSession());
+        logger.info("online----" + getOnline());
+
     }
 
     @Override
-    public void sessionDestroyed(HttpSessionEvent event) throws ClassCastException {
+    public void sessionDestroyed(HttpSessionEvent event) {
         logger.info("---sessionDestroyed----");
-        HttpSession session = event.getSession();
-        logger.info("session----:" + session);
-        logger.info("deletedSessionId: "+session.getId());
-        System.out.println(session.getCreationTime());
-        System.out.println(session.getLastAccessedTime());
-        ServletContext application = session.getServletContext();
-        HashSet sessions = (HashSet) application.getAttribute("sessions");
-        // 销毁的session均从HashSet集中移除
-        sessions.remove(session);
-        logger.info("sessions----:" + sessions);
-        online = sessions.size();
-        logger.info("online----:" + online);
+        sessions.remove(event.getSession().getId());
+        logger.info("online----" + getOnline());
+
     }
 
 }

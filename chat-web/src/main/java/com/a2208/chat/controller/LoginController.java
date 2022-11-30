@@ -1,6 +1,5 @@
 package com.a2208.chat.controller;
 
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.a2208.chat.component.SessionListener;
@@ -11,19 +10,16 @@ import com.a2208.chat.utils.FileUtil;
 import com.a2208.chat.utils.Result;
 import com.a2208.chat.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.WebUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,46 +33,48 @@ public class LoginController {
 
     //登录
     @RequestMapping(value = "/login")
-    public Result userLogin(@RequestParam(value = "account") String account,
-                            @RequestParam(value = "password") String password,
-                            HttpServletRequest request) {
+    public Result userLogin(HttpServletRequest request) {
         Map<String, String> loginInfo = new HashMap<>();
-        loginInfo.put("password", password);
-        loginInfo.put("account", account);
+        loginInfo.put("account", request.getParameter("account"));
+        loginInfo.put("password", request.getParameter("password"));
         System.out.println("loginInfo:"+loginInfo);
         User u = userService.login(loginInfo);
         System.out.println("user:" + u);
 
         if(u != null){
-//            Long id = u.getId();
-//            Map<String, Long> online = new HashMap<>();
-//            online.put("id", id);
-//            online.put("stateId", 1L);
             HttpSession session = request.getSession();
-            session.setAttribute("account",account);
-            session.setAttribute("password",password);
-            //一小时没有活动，则session失效
-            session.setMaxInactiveInterval(60*60);
+            session.setAttribute("account", request.getParameter("account"));
+            //30分钟没有活动，则session失效
+            session.setMaxInactiveInterval(30*60);
 
-            System.out.println(session.getId());
             return ResultUtil.success(u);
-
         }
         return ResultUtil.fail();
     }
 
-
-    //默认登出stateId为0，使用登出功能前端传参不需携带stateId
+    //登出时删除session，目前还有问题，无法获取网页session
     @RequestMapping(value = "/logout")
     public Result logout(HttpServletRequest request) {
+        System.out.println("session1: " + request.getSession(false));
+        SessionListener.sessionLogout(request);
         //防止创建Session
-        HttpSession session = request.getSession(false);
-        if(session != null){
-            session.removeAttribute("account");
-            session.removeAttribute("password");
-            session.invalidate();
-        }
+//        HttpSession session = request.getSession(false);
+//        System.out.println("session" + session);
+//        if(session != null){
+//            session.removeAttribute("loginInfo");
+//            session.invalidate();
+//        }
+
         return ResultUtil.success("登出成功");
+    }
+    //获取当前页面session，但是getAttribute这个方法有错
+    @RequestMapping(value = "/getsession")
+    public Result getSession(HttpServletRequest request) {
+        if(WebUtils.getSessionAttribute(request, "id") != null){
+            return ResultUtil.success("正在使用！");
+        }
+
+        return ResultUtil.error("session不存在");
     }
 
     //注册
@@ -95,15 +93,15 @@ public class LoginController {
                 return ResultUtil.fail();
             }
             String avatar = FileUtil.uploadFile(file);
-            User u = new User(account, o.getStr("nickname"),
+            User u = new User(null, account, o.getStr("nickname"),
                     o.getStr("password"),
                     DateUtil.dateParse(o.getStr("birthday")),
                     o.getInt("sex"), avatar, roleId);
 
             System.out.println("class:" + u);
             if(userService.insert(u) != 0)
-                return ResultUtil.success("注册成功");
+                return ResultUtil.success("注册成功！");
         }
-        return ResultUtil.error("数据错误");
+        return ResultUtil.error("数据错误！");
     }
 }

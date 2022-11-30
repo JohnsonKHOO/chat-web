@@ -1,5 +1,6 @@
 package com.a2208.chat.service;
 
+import com.a2208.chat.entity.Friend;
 import com.a2208.chat.entity.GroupUser;
 import com.a2208.chat.dao.GroupUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,11 +58,26 @@ public class GroupUserService {
     /**
      * 删除记录
      *
-     * @param groupUser 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
-    public int delete(GroupUser groupUser) {
-        return groupUserMapper.delete(groupUser);
+    public int delete(Long id) {
+        return groupUserMapper.delete(id);
     }
 
+    public List<GroupUser> getByGroupId(Long groupId, String account) {
+        return groupUserMapper.getByGroupId(groupId, account);
+    }
+
+    public GroupUser isExist(GroupUser gu) {
+        return groupUserMapper.isExist(gu);
+    }
+
+    public int deleteByBoth(Long ownerId, Long id) {
+        return groupUserMapper.deleteByBoth(ownerId,id);
+    }
+
+    public List<GroupUser> getByUserId(Long userId, String account) {
+        return groupUserMapper.getByUserId(userId,account);
+    }
 }

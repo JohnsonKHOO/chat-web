@@ -1,21 +1,13 @@
 <template>
   <div class="userlist_container">
 
-    <!--搜索筛选-->
-    <el-form :inline="true" :model="userSearch" class="user_search">
-      <el-form-item label="搜索：">
-        <el-input v-model="userSearch.account" placeholder="请输入用户账号"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="search">搜索</el-button>
-        <el-button type="primary" icon="el-icon-plus" @click="add">新增用户</el-button>
-        <el-button type="primary" icon="el-icon-refresh" @click="getlist">刷新</el-button>
-      </el-form-item>
-    </el-form>
     <!--用户信息列表-->
     <el-main>
-      <el-table :data="tableData" highlight-current-row border style="width: 100%;" class="userlist_table" height="500">
-        <el-table-column prop="id" label="id"></el-table-column>
+      <el-table
+        :data="tableData.filter(data => !search || data.account.toLowerCase().includes(search.toLowerCase())
+        || data.nickname.toLowerCase().includes(search.toLowerCase()))"
+        highlight-current-row border style="width: 100%;" class="userlist_table" height="500">
+        <el-table-column prop="id" label="用户id"></el-table-column>
         <el-table-column label="头像">
           <template v-slot="scope">
             <el-image v-if="scope.row.avatar"
@@ -30,6 +22,11 @@
         <el-table-column prop="createTime" :formatter="susSet" label="创建时间"></el-table-column>
         <el-table-column prop="updateTime" :formatter="susSet" label="最近更新时间"></el-table-column>
         <el-table-column label="操作" width="180" align="center">
+          <template slot="header" slot-scope="scope">
+            <el-input v-if="scope" v-model="search" size="mini" placeholder="输入关键字搜索" />
+            <el-button type="text" icon="el-icon-plus" @click="add">新增用户</el-button>
+          </template>
+
           <template slot-scope="scope">
             <el-button type="text" icon="el-icon-edit" @click="edit(scope.row)">编辑</el-button>
             <el-button type="text" icon="el-icon-delete" class="deleteColor" @click="del(scope.row.id)">删除</el-button>
@@ -109,20 +106,7 @@
             <el-date-picker v-model="editForm.birthday" type="date" placeholder="选择日期">
             </el-date-picker>
           </el-form-item>
-          <!--密码输入框-->
-          <el-form-item label="密码：" prop="password">
-            <el-input type="password" v-model="editForm.password" placeholder="请输入您的密码" clearable show-password>
-            </el-input>
-          </el-form-item>
-
-          <!-- 头像上传 -->
-          <el-form-item label="头像上传：">
-            <el-upload ref="upfile" class="avatar-uploader" action="#" :auto-upload="false" :on-change="handleChange"
-              :show-file-list="false" :limit="1" accept="image/png,image/gif,image/jpg,image/jpeg">
-              <img v-if="avatar" :src="avatar" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
-          </el-form-item>
+      
         </el-form>
         <!--编辑用户信息对话框按钮-->
         <div slot="footer" class="dialog_footer">
@@ -163,7 +147,7 @@
         tableData: [{}],
         addFormVisible: false,
         editFormVisible: false,
-        userSearch: {},
+        search: '',
         addForm: {
           account: '',
           nickname: '',
@@ -228,7 +212,7 @@
     },
 
     mounted() {
-      this.getlist();
+      this.list();
     },
 
     methods: {
@@ -248,14 +232,20 @@
           if (valid) {
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.addForm));
-            fd.append('file', this.fileList[0].raw);
+            if(JSON.stringify(this.fileList) === '{}'){
+              console.log(this.fileList);
+            }
+            else{
+              console.log(this.fileList);
+              fd.append('file', this.fileList[0].raw);
+            }
             this.$axios
               .post('/register', fd)
               .then(res => {
                 console.log(res.data)
                 if (res.data.code === 200) {
                   this.$message.success("注册成功！");
-                  this.getlist();
+                  this.list();
                 } else if (res.data.code === 400) {
                   this.$message.error("新增用户失败，账号已存在！");
                 } else if (res.data.code === 600) {
@@ -263,7 +253,7 @@
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
             console.log('请输入正确信息');
@@ -280,39 +270,42 @@
           if (valid) {
             var fd = new FormData();
             fd.append('user', JSON.stringify(this.editForm));
-            fd.append('file', this.fileList[0].raw);
             this.$axios
               .post('/user/update', fd)
               .then(res => {
                 console.log(res.data)
                 if (res.data.code === 200) {
                   this.$message.success("更新成功！");
-                  this.getlist();
+                  this.list();
                 } else if (res.data.code === 400) {
                   this.$message.error("用户账号已存在！");
                 }
               })
               .catch(err => {
-                this.$message.error("请求失败");
+                this.$message.warning("请求失败");
               })
           } else {
-            this.$message.error("数据错误!");
+            this.$message.warning("数据错误!");
             return false;
           }
         });
       },
 
-      search() { //搜索按钮方法
+      list() { //搜索按钮方法
         console.log("get all data");
         var fd = new FormData();
-        fd.append('account', this.userSearch.account);
+        fd.append('account', "");
+      
         this.$axios
           .post('/user/search', fd)
           .then(res => {
-            console.log(res.data);
-            this.tableData = res.data.data;
+            if(res.data.code === 200){
+              this.tableData = res.data.data;
+            }else{
+              this.$message.error("没有数据！");
+            }
           }).catch(err => {
-            this.$message.error("请求失败");
+            this.$message.warning("请求失败");
           })
       },
       add() { //显示新增用户表单
@@ -364,7 +357,7 @@
                   type: 'success',
                   message: '删除用户成功！'
                 });
-                this.getlist();
+                this.list();
               } else {
                 this.$message({
                   type: 'error',
@@ -372,21 +365,11 @@
                 });
               }
             }).catch(err => {
-              this.$message.error("请求失败");
+              this.$message.warning("请求失败");
             })
         })
       },
-      getlist() {
-        console.log("get list");
-        this.$axios.get('/user/list')
-          .then(res => {
-            this.tableData = res.data.data;
-            console.log(this.tableData);
-          }).catch(err => {
-            this.$message.error("请求失败");
-          })
-
-      },
+     
     }
   }
 

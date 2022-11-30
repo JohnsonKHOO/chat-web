@@ -1,13 +1,24 @@
 package com.a2208.chat.controller;
 
+import java.io.IOException;
 import java.util.List;
+
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.a2208.chat.entity.Friend;
+import com.a2208.chat.entity.GroupUser;
+import com.a2208.chat.utils.FileUtil;
+import com.a2208.chat.utils.Result;
+import com.a2208.chat.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.a2208.chat.entity.Message;
 import com.a2208.chat.service.MessageService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/message")
@@ -17,37 +28,24 @@ public class MessageController {
     private MessageService messageService;
 
     /**
-     * 查询所有记录
+     * 根据用户与好友id查询和聊天内容查询
      *
-     * @return 返回集合，没有返回空List
-     */
-    @RequestMapping("/list")
-    public List<Message> listAll() {
-        return messageService.listAll();
-    }
-
-
-    /**
-     * 根据主键查询
-     *
-     * @param id 主键
+     * @param fromUserId,toUserId,content 从用户id发给好友id的消息内容
      * @return 返回记录，没有返回null
      */
-    @RequestMapping("/getById")
-    public Message getById(Long id) {
-        return messageService.getById(id);
+    @RequestMapping("/list")
+    public Result getByUserId(@RequestParam(value = "fromUserId") String fromUserId,
+                              @RequestParam(value = "toUserId") String toUserId,
+                              @RequestParam(value = "content") String content) {
+        List<Message> l = messageService.getByUserId(Long.parseLong(fromUserId),
+                    Long.parseLong(toUserId), content);
+        System.out.println(l);
+        if (!l.isEmpty())
+            return ResultUtil.success(l);
+
+        return ResultUtil.fail();
     }
 
-    /**
-     * 新增，忽略null字段
-     *
-     * @param message 新增的记录
-     * @return 返回影响行数
-     */
-    @RequestMapping("/insert")
-    public int insert(@RequestBody Message message) {
-        return messageService.insert(message);
-    }
 
     /**
      * 修改，忽略null字段
@@ -56,19 +54,34 @@ public class MessageController {
      * @return 返回影响行数
      */
     @RequestMapping("/update")
-    public int update(@RequestBody Message message) {
-        return messageService.update(message);
+    public Result update(@RequestParam(value = "message") String message,
+                         @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+        if (message != null) {
+            JSONObject o = JSONUtil.parseObj(message);
+            String img = FileUtil.uploadFile(file);
+            Message m = new Message(o.getLong("id"), o.getLong("fromUserId"),
+                    o.getLong("toUserId"), o.getStr("content"),
+                    o.getInt("readFlag"), img);
+
+            if (messageService.update(m) != 0) {
+                return ResultUtil.success("修改信息成功！");
+            }
+        }
+        return ResultUtil.error("数据错误");
     }
 
     /**
      * 删除记录
      *
-     * @param message 待删除的记录
+     * @param id 待删除的记录
      * @return 返回影响行数
      */
     @RequestMapping("/delete")
-    public int delete(@RequestBody Message message) {
-        return messageService.delete(message);
+    public Result delete(@RequestParam(value = "id") String id) {
+        if (messageService.delete(Long.parseLong(id)) != 0)
+            return ResultUtil.success("删除好友记录" + id);
+
+        return ResultUtil.fail();
     }
 
 }

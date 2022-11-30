@@ -3,18 +3,25 @@
 <mapper namespace="com.a2208.chat.dao.GroupMapper">
     <resultMap id="BaseResultMap" type="com.a2208.chat.entity.Group">
         <result column="id" property="id" />
-        <result column="name" property="name" />
+        <result column="g_name" property="name" />
         <result column="create_time" property="createTime" />
         <result column="owner_id" property="ownerId" />
         <result column="avatar" property="avatar" />
         <result column="notice" property="notice" />
         <result column="signature" property="signature" />
+        <!-- 对象用association -->
+        <association property="user" javaType="com.a2208.chat.entity.User">
+            <result column="owner_id" property="id"/>
+            <result column="account" property="account"/>
+            <result column="nickname" property="nickname"/>
+            <result column="user_avatar" property="avatar"/>
+        </association>
     </resultMap>
 
     <!-- 表字段 -->
     <sql id="baseColumns">
         id
-        , name
+        , g_name
         , create_time
         , owner_id
         , avatar
@@ -25,16 +32,35 @@
     <!-- 查询全部 -->
     <select id="listAll" resultMap="BaseResultMap">
         SELECT
-        <include refid="baseColumns" />
-        FROM chat_db.group
+        *
+        FROM chat_db.group g, chat_db.user u
+        WHERE g.owner_id = u.id
     </select>
 
     <!-- 根据主键获取单条记录 -->
-    <select id="getById" resultMap="BaseResultMap" parameterType="Integer">
+    <select id="getById" resultMap="BaseResultMap" parameterType="Long">
         SELECT
-        <include refid="baseColumns" />
-        FROM chat_db.group
-        WHERE id = #{id}
+        *
+        FROM chat_db.group g, chat_db.user u
+        WHERE g.id = #{id}
+        AND g.owner_id = u.id
+    </select>
+
+    <!-- 根据群主id获取 -->
+    <select id="getOwner" resultMap="BaseResultMap" parameterType="Long">
+        SELECT
+        *
+        FROM chat_db.group g, chat_db.user u
+        WHERE g.owner_id = #{ownerId}
+        AND g.owner_id = u.id
+    </select>
+<!--    根据群名字获取-->
+    <select id="getByName" resultMap="BaseResultMap" parameterType="String">
+        SELECT
+        *
+        FROM chat_db.group g, chat_db.user u
+        WHERE inStr(g_name, #{name})
+        AND g.owner_id = u.id
     </select>
 
     <!-- 插入全部字段 -->
@@ -43,43 +69,61 @@
     >
         INSERT INTO chat_db.group
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            name,
-            create_time,
+            g_name,
             owner_id,
             avatar,
-            notice,
-            signature,
+            signature
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
             #{name},
-            #{createTime},
             #{ownerId},
             #{avatar},
-            #{notice},
-            #{signature},
+            #{signature}
         </trim>
     </insert>
 
-
-    <!-- 更新,更新全部字段 -->
-    <update id="update" parameterType="com.a2208.chat.entity.Group">
+    <!-- 更新群公告 -->
+    <update id="updateNotice">
         UPDATE chat_db.group
         <set>
-            name=#{name},
-            create_time=#{createTime},
-            owner_id=#{ownerId},
-            avatar=#{avatar},
-            notice=#{notice},
-            signature=#{signature},
+            notice=#{notice}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新群简介 -->
+    <update id="updateSignature">
+        UPDATE chat_db.group
+        <set>
+            signature=#{signature}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新群组 -->
+    <update id="updateAvatar">
+        UPDATE chat_db.group
+        <set>
+            avatar=#{avatar}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新群名字与群主字段 -->
+    <update id="update">
+        UPDATE chat_db.group
+        <set>
+            g_name=#{name},
+            owner_id=#{ownerId}
         </set>
         WHERE id = #{id}
     </update>
 
 
     <!-- 根据主键删除记录 -->
-    <delete id="delete" parameterType="com.a2208.chat.entity.Group">
-        UPDATE chat_db.group
-        SET is_deleted=1
+    <delete id="delete" parameterType="Long">
+        DELETE
+        FROM chat_db.group
         WHERE id = #{id}
     </delete>
 
